@@ -1631,45 +1631,57 @@ def convertir_serializable(obj):
     else:
         return obj
 
+
+
+
+
+def extraer_caracteristicas_minuciosas2(img):
+    extractor_caracteristicas = ReconocimientoHuella()
+    # Se procesa la imagen (esqueletización, extracción de puntos y limpieza de ruido)
+    resultados = extractor_caracteristicas.extraer_caracteristicas(img)
+    # En lugar de mostrar_resultados() que dibuja los puntos,
+    # retornamos la imagen limpia (el esqueleto ya procesado)
+    img_resultado = extractor_caracteristicas._esqueleto  
+    return resultados, img_resultado
+
+
 def procesar_imagenes(request):
     if request.method == "POST":
-        # Obtener las imágenes en base64 desde FormData
         imagen_binalizada1 = request.POST.get("imagen1")
         imagen_binalizada2 = request.POST.get("imagen2")
-        
-        # Decodificar las imágenes desde base64
         img1_bytes = base64.b64decode(imagen_binalizada1)
         img2_bytes = base64.b64decode(imagen_binalizada2)
-        
-        # Convertir los bytes a una imagen PIL y a escala de grises
         pil_img1 = Image.open(BytesIO(img1_bytes)).convert('L')
         pil_img2 = Image.open(BytesIO(img2_bytes)).convert('L')
-        
-        # Convertir la imagen PIL a arreglo NumPy
         np_img1 = np.array(pil_img1)
         np_img2 = np.array(pil_img2)
-        
-        # Llamar a la función que extrae características y genera las imágenes procesadas
-        resultados1, img_result1 = extraer_caracteristicas_minuciosas(np_img1)
-        resultados2, img_result2 = extraer_caracteristicas_minuciosas(np_img2)
-        
-        # Convertir la imagen procesada (arreglo NumPy) a base64 para enviarla en la respuesta
+
+        # Para la primera imagen
+        resultados1, img_result1 = extraer_caracteristicas_minuciosas2(np_img1)
+        img_result1 = np.uint8(255 - img_result1)
+
         buffered1 = BytesIO()
         Image.fromarray(img_result1).save(buffered1, format="PNG")
         img_base64_1 = base64.b64encode(buffered1.getvalue()).decode("utf-8")
         
+        # Para la segunda imagen
+        resultados2, img_result2 = extraer_caracteristicas_minuciosas2(np_img2)
+        #img_result2 = 255 - img_result2
+        img_result2 = np.uint8(255 - img_result2)
+
         buffered2 = BytesIO()
         Image.fromarray(img_result2).save(buffered2, format="PNG")
         img_base64_2 = base64.b64encode(buffered2.getvalue()).decode("utf-8")
         
-        # Convertir los resultados a tipos serializables
-        resultados_serializables = convertir_serializable(resultados1)
+        # Asegúrate de que tus resultados sean serializables
+        resultados_serializables1 = convertir_serializable(resultados1)
+        resultados_serializables2 = convertir_serializable(resultados2)
         
-        # Crear la respuesta JSON con los resultados y las imágenes procesadas en base64
         response_data = {
-            'resultados': resultados_serializables,
-            'imagen_esqueletizada1': f"data:image/png;base64,{img_base64_1}",
-            'imagen_esqueletizada2': f"data:image/png;base64,{img_base64_2}",
+            'resultados1': resultados_serializables1,
+            'resultados2': resultados_serializables2,
+            'imagen_esqueletizada1': f"data:image/png;base64,{imagen_binalizada1}",
+            'imagen_esqueletizada2': f"data:image/png;base64,{imagen_binalizada2}",
         }
         
         return JsonResponse(response_data)

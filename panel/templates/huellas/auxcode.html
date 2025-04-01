@@ -368,10 +368,6 @@
                     
                 </div>
                 <button id="eliminarNoCotejados">Depurar Puntos</button>
-                <button id="mostrarPlanos">Mostrar Planos Cartesianos</button>
-                <canvas id="canvasPlano1"></canvas>
-           
-                <canvas id="canvasPlano2"></canvas>
             </div>
             
         </div>
@@ -592,261 +588,64 @@ function destroy(cropper) {
 </script>
 
 <script>
+    // function getCookie(name) {
+    //     let cookieValue = null;
+    //     if (document.cookie && document.cookie !== '') {
+    //         let cookies = document.cookie.split(';');
+    //         for (let i = 0; i < cookies.length; i++) {
+    //             let cookie = cookies[i].trim();
+    //             // Busca la cookie que empieza con el nombre dado
+    //             if (cookie.substring(0, name.length + 1) === (name + '=')) {
+    //                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+    //                 break;
+    //             }
+    //         }
+    //     }
+    //     return cookieValue;
+    // }
     
-// let puntosTerminacion1 = [];
-// let puntosBifurcacion1 = [];
-// let puntosTerminacion2 = [];
-// let puntosBifurcacion2 = [];
-
-// let puntosCotejo = [];
-
-// let pendingDeletion = null;  
-
-// function procesarImagenes() {
-//     const formData = new FormData();
-//     const img1 = document.getElementById('binalizada1');
-//     const img2 = document.getElementById('binalizada2');
-//     if (!img1.complete || !img2.complete) {
-//         alert("Asegúrate de que ambas imágenes estén completamente cargadas.");
-//         return;
-//     }
-//     const canvasTemp1 = document.createElement('canvas');
-//     canvasTemp1.width = img1.naturalWidth;
-//     canvasTemp1.height = img1.naturalHeight;
-//     const ctxTemp1 = canvasTemp1.getContext('2d');
-//     ctxTemp1.drawImage(img1, 0, 0, canvasTemp1.width, canvasTemp1.height);
-//     const dataURL1 = canvasTemp1.toDataURL('image/png');
-//     const base64Image1 = dataURL1.split(',')[1];
-//     const canvasTemp2 = document.createElement('canvas');
-//     canvasTemp2.width = img2.naturalWidth;
-//     canvasTemp2.height = img2.naturalHeight;
-//     const ctxTemp2 = canvasTemp2.getContext('2d');
-//     ctxTemp2.drawImage(img2, 0, 0, canvasTemp2.width, canvasTemp2.height);
-//     const dataURL2 = canvasTemp2.toDataURL('image/png');
-//     const base64Image2 = dataURL2.split(',')[1];
-
-//     formData.append('imagen1', base64Image1);
-//     formData.append('imagen2', base64Image2);
-
-//     fetch('/procesar_imagenes/', {
-//         method: 'POST',
-//         body: formData,
-//         headers: {
-//             'X-CSRFToken': getCookie('csrftoken')
-//         }
-//     })
-//     .then(response => response.json())
-//     .then(data => {
-//         cargarCanvas('canvasProcesada1', data.imagen_esqueletizada1, data.resultados1, 1);
-//         cargarCanvas('canvasProcesada2', data.imagen_esqueletizada2, data.resultados2, 2);
-//     })
-//     .catch(error => console.error('Error al procesar las imágenes:', error));
-// }
-
-// function cargarCanvas(canvasId, imagenDataURL, resultados, numCanvas) {
-//     const canvas = document.getElementById(canvasId);
-//     const ctx = canvas.getContext('2d');
-//     const img = new Image();
-//     img.onload = function() {
-//         canvas.width = img.width;
-//         canvas.height = img.height;
-//         ctx.drawImage(img, 0, 0);
-//         canvas.setAttribute('data-img', imagenDataURL);
-//         if (numCanvas === 1) {
-//             puntosTerminacion1 = resultados.terminoX.map((x, index) => ({ x: x, y: resultados.terminoY[index] }));
-//             puntosBifurcacion1 = resultados.bifurX.map((x, index) => ({ x: x, y: resultados.bifurY[index] }));
-//         } else if (numCanvas === 2) {
-//             puntosTerminacion2 = resultados.terminoX.map((x, index) => ({ x: x, y: resultados.terminoY[index] }));
-//             puntosBifurcacion2 = resultados.bifurX.map((x, index) => ({ x: x, y: resultados.bifurY[index] }));
-//         }
-//         dibujarPuntos(canvasId, numCanvas);
-//     }
-//     img.src = imagenDataURL;
-// }
-
-// function dibujarPuntos(canvasId, numCanvas) {
-//     const canvas = document.getElementById(canvasId);
-//     const ctx = canvas.getContext('2d');
-//     const grosorBorde = 3; 
-//     let puntosTerminacion, puntosBifurcacion;
-//     if (numCanvas === 1) {
-//         puntosTerminacion = puntosTerminacion1;
-//         puntosBifurcacion = puntosBifurcacion1;
-//     } else {
-//         puntosTerminacion = puntosTerminacion2;
-//         puntosBifurcacion = puntosBifurcacion2;
-//     }
-//     ctx.strokeStyle = 'red';
-//     ctx.lineWidth = grosorBorde;
-//     puntosTerminacion.forEach(p => {
-//         ctx.beginPath();
-//         ctx.arc(p.y, p.x, 5, 0, 2 * Math.PI);
-//         ctx.stroke();
-//     });
-//     ctx.strokeStyle = 'blue';
-//     ctx.lineWidth = grosorBorde;
-//     puntosBifurcacion.forEach(p => {
-//         ctx.beginPath();
-//         ctx.arc(p.y, p.x, 5, 0, 2 * Math.PI);
-//         ctx.stroke();
-//     });
-//     ctx.strokeStyle = 'orange';
-//     puntosCotejo.forEach(p => {
-//         if (p.canvasId === canvasId) {
-//             ctx.beginPath();
-//             ctx.arc(p.y, p.x, 5, 0, 2 * Math.PI);
-//             ctx.stroke();
-//         }
-//     });
-// }
-
-// // Función para manejar clics en cada canvas (se abre modal en vez de eliminar inmediatamente)
-// function handleCanvasClick(event) {
-//     // Identificar en qué canvas se hizo clic
-//     const canvas = event.target;
-//     const canvasId = canvas.id;
-//     const rect = canvas.getBoundingClientRect();
-//     const clickX = event.clientX - rect.left;
-//     const clickY = event.clientY - rect.top;
-//     const radioDeteccion = 7; // Radio de detección para el clic
-
-//     // Seleccionar los conjuntos de puntos según el canvas
-//     let puntosTerminacion, puntosBifurcacion;
-//     if (canvasId === 'canvasProcesada1') {
-//         puntosTerminacion = puntosTerminacion1;
-//         puntosBifurcacion = puntosBifurcacion1;
-//     } else if (canvasId === 'canvasProcesada2') {
-//         puntosTerminacion = puntosTerminacion2;
-//         puntosBifurcacion = puntosBifurcacion2;
-//     }
-
-//     // Buscar punto cercano en ambos conjuntos
-//     let puntoEncontrado = null;
-//     let tipo = null;
-//     let indice = -1;
+    // function procesarImagenes() {
+    //     const formData = new FormData();
+    //     const img1 = document.getElementById('binalizada1');
+    //     const img2 = document.getElementById('binalizada2');
+    //     if (!img1.complete || !img2.complete) {
+    //         alert("Asegúrate de que ambas imágenes estén completamente cargadas.");
+    //         return;
+    //     }
     
-//     // Buscar en terminaciones
-//     for (let i = 0; i < puntosTerminacion.length; i++) {
-//         // Se compara usando la misma lógica original (p.y con clickX y p.x con clickY)
-//         const dist = Math.sqrt(Math.pow(puntosTerminacion[i].y - clickX, 2) + Math.pow(puntosTerminacion[i].x - clickY, 2));
-//         if (dist < radioDeteccion) {
-//             puntoEncontrado = puntosTerminacion[i];
-//             tipo = 'termino';
-//             indice = i;
-//             break;
-//         }
-//     }
-//     // Si no se encontró en terminaciones, buscar en bifurcaciones
-//     if (!puntoEncontrado) {
-//         for (let i = 0; i < puntosBifurcacion.length; i++) {
-//             const dist = Math.sqrt(Math.pow(puntosBifurcacion[i].y - clickX, 2) + Math.pow(puntosBifurcacion[i].x - clickY, 2));
-//             if (dist < radioDeteccion) {
-//                 puntoEncontrado = puntosBifurcacion[i];
-//                 tipo = 'bifur';
-//                 indice = i;
-//                 break;
-//             }
-//         }
-//     }
-
-//     if (puntoEncontrado) {
-//         // Si se encontró un punto, guardar la info y abrir el modal
-//         pendingDeletion = { canvasId, tipo, indice, x: puntoEncontrado.x, y: puntoEncontrado.y };
-//         abrirModal();
-//     } else {
-//         // Si no se encontró punto, agregar uno nuevo para cotejo (se usa el mismo orden: x = clickY, y = clickX)
-//         puntosCotejo.push({ x: clickY, y: clickX, canvasId });
-//         redibujarCanvas(canvasId, canvasId === 'canvasProcesada1' ? 1 : 2);
-//     }
-// }
-
-// // Función para abrir el modal
-// function abrirModal() {
-//     const modal = document.getElementById('deletePointModal');
-//     modal.style.display = 'block';
-// }
-
-// // Función para cerrar el modal
-// function cerrarModal() {
-//     const modal = document.getElementById('deletePointModal');
-//     modal.style.display = 'none';
-//     pendingDeletion = null;
-// }
-
-// // Función para confirmar la eliminación y redibujar el canvas
-// function confirmarEliminacion() {
-//     if (!pendingDeletion) return;
+    //     const canvas1 = document.createElement('canvas');
+    //     canvas1.width = img1.naturalWidth;
+    //     canvas1.height = img1.naturalHeight;
+    //     const ctx1 = canvas1.getContext('2d');
+    //     ctx1.drawImage(img1, 0, 0, canvas1.width, canvas1.height);
+    //     const dataURL1 = canvas1.toDataURL('image/png');
+    //     const canvas2 = document.createElement('canvas');
+    //     canvas2.width = img2.naturalWidth;
+    //     canvas2.height = img2.naturalHeight;
+    //     const ctx2 = canvas2.getContext('2d');
+    //     ctx2.drawImage(img2, 0, 0, canvas2.width, canvas2.height);
+    //     const dataURL2 = canvas2.toDataURL('image/png');
+    //     const base64Image1 = dataURL1.split(',')[1];
+    //     const base64Image2 = dataURL2.split(',')[1];
+    //     formData.append('imagen1', base64Image1);
+    //     formData.append('imagen2', base64Image2);
+    //     fetch('/procesar_imagenes/', {
+    //         method: 'POST',
+    //         body: formData,
+    //         headers: {
+    //             'X-CSRFToken': getCookie('csrftoken')
+    //         }
+    //     })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         document.getElementById('imagen_esqueletizada1').src = data.imagen_esqueletizada1;
+    //         document.getElementById('imagen_esqueletizada2').src = data.imagen_esqueletizada2;
     
-//     const { canvasId, tipo, indice } = pendingDeletion;
-//     if (canvasId === 'canvasProcesada1') {
-//         if (tipo === 'termino') {
-//             puntosTerminacion1.splice(indice, 1);
-//         } else {
-//             puntosBifurcacion1.splice(indice, 1);
-//         }
-//         redibujarCanvas(canvasId, 1);
-//     } else if (canvasId === 'canvasProcesada2') {
-//         if (tipo === 'termino') {
-//             puntosTerminacion2.splice(indice, 1);
-//         } else {
-//             puntosBifurcacion2.splice(indice, 1);
-//         }
-//         redibujarCanvas(canvasId, 2);
-//     }
-//     cerrarModal();
-// }
-
-// // Función para marcar 
-// function marcarParaCotejo() {
-//     if (!pendingDeletion) return;
-//     const { canvasId, x, y } = pendingDeletion;
-//     puntosCotejo.push({ x, y, canvasId });
-//     redibujarCanvas(canvasId, canvasId === 'canvasProcesada1' ? 1 : 2);
-//     cerrarModal();
-// }
-
-// // Función para eliminar (depurar) los puntos que NO están 
-// function eliminarPuntosNoCotejados() {
-//     // Filtra los puntos 
-//     const filtrarPuntos = (puntos, canvasId) =>
-//         puntos.filter(p => puntosCotejo.some(pc => pc.x === p.x && pc.y === p.y && pc.canvasId === canvasId));
-
-//     puntosTerminacion1 = filtrarPuntos(puntosTerminacion1, 'canvasProcesada1');
-//     puntosBifurcacion1 = filtrarPuntos(puntosBifurcacion1, 'canvasProcesada1');
-//     puntosTerminacion2 = filtrarPuntos(puntosTerminacion2, 'canvasProcesada2');
-//     puntosBifurcacion2 = filtrarPuntos(puntosBifurcacion2, 'canvasProcesada2');
-
-//     redibujarCanvas('canvasProcesada1', 1);
-//     redibujarCanvas('canvasProcesada2', 2);
-// }
-
-// // Función para redibujar el canvas usando la imagen limpia almacenada
-// function redibujarCanvas(canvasId, numCanvas) {
-//     const canvas = document.getElementById(canvasId);
-//     const ctx = canvas.getContext('2d');
-//     const imagenDataURL = canvas.getAttribute('data-img');
-//     if (!imagenDataURL) return;
-//     const img = new Image();
-//     img.onload = function() {
-//         ctx.clearRect(0, 0, canvas.width, canvas.height);
-//         ctx.drawImage(img, 0, 0);
-//         dibujarPuntos(canvasId, numCanvas);
-//     }
-//     img.src = imagenDataURL;
-// }
-
-// document.getElementById('canvasProcesada1').addEventListener('click', handleCanvasClick);
-// document.getElementById('canvasProcesada2').addEventListener('click', handleCanvasClick);
-// document.getElementById('confirmDelete').addEventListener('click', confirmarEliminacion);
-// document.getElementById('marcarCotejo').addEventListener('click', marcarParaCotejo);
-// document.getElementById('cancelDelete').addEventListener('click', cerrarModal);
-
-// document.getElementById('eliminarNoCotejados').addEventListener('click', eliminarPuntosNoCotejados);
-
-// ================================
-// Código original (con cotejo) 
-// ================================
-
+           
+    //     })
+    //     .catch(error => console.error('Error al procesar las imágenes:', error));
+    // }
+    
 // Variables globales para almacenar puntos de cada imagen
 let puntosTerminacion1 = [];
 let puntosBifurcacion1 = [];
@@ -857,8 +656,9 @@ let puntosBifurcacion2 = [];
 let puntosCotejo = [];
 
 // Variable para la eliminación mediante modal
-let pendingDeletion = null;  // Objeto: { canvasId, tipo ('termino' o 'bifur'), indice, x, y }
+let pendingDeletion = null;  // Objeto: { canvasId, tipo ('termino' o 'bifur'), indice }
 
+// Función para procesar las imágenes y cargar los canvas
 function procesarImagenes() {
     const formData = new FormData();
     const img1 = document.getElementById('binalizada1');
@@ -906,15 +706,20 @@ function procesarImagenes() {
     .catch(error => console.error('Error al procesar las imágenes:', error));
 }
 
+// Función para cargar la imagen en el canvas y dibujar los puntos
 function cargarCanvas(canvasId, imagenDataURL, resultados, numCanvas) {
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
     const img = new Image();
     img.onload = function() {
+        // Ajustar el tamaño del canvas según la imagen
         canvas.width = img.width;
         canvas.height = img.height;
+        // Dibujar la imagen limpia
         ctx.drawImage(img, 0, 0);
+        // Guardar la imagen limpia en un atributo para redibujar luego
         canvas.setAttribute('data-img', imagenDataURL);
+        // Guardar puntos según el canvas que se esté procesando (sin alterar el orden original)
         if (numCanvas === 1) {
             puntosTerminacion1 = resultados.terminoX.map((x, index) => ({ x: x, y: resultados.terminoY[index] }));
             puntosBifurcacion1 = resultados.bifurX.map((x, index) => ({ x: x, y: resultados.bifurY[index] }));
@@ -927,11 +732,13 @@ function cargarCanvas(canvasId, imagenDataURL, resultados, numCanvas) {
     img.src = imagenDataURL;
 }
 
+// Función para dibujar los puntos en el canvas correspondiente
 function dibujarPuntos(canvasId, numCanvas) {
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
-    const grosorBorde = 3;
+    const grosorBorde = 3; // Ajusta este valor para cambiar el grosor del borde
 
+    // Elegir los conjuntos de puntos en función del canvas
     let puntosTerminacion, puntosBifurcacion;
     if (numCanvas === 1) {
         puntosTerminacion = puntosTerminacion1;
@@ -941,7 +748,7 @@ function dibujarPuntos(canvasId, numCanvas) {
         puntosBifurcacion = puntosBifurcacion2;
     }
 
-    // Se usa la misma lógica original (dibujo con (p.y, p.x))
+    // Dibujar puntos de terminación en rojo (se usa p.y como coordenada horizontal para mantener lo original)
     ctx.strokeStyle = 'red';
     ctx.lineWidth = grosorBorde;
     puntosTerminacion.forEach(p => {
@@ -950,6 +757,7 @@ function dibujarPuntos(canvasId, numCanvas) {
         ctx.stroke();
     });
 
+    // Dibujar puntos de bifurcación en azul
     ctx.strokeStyle = 'blue';
     ctx.lineWidth = grosorBorde;
     puntosBifurcacion.forEach(p => {
@@ -958,6 +766,7 @@ function dibujarPuntos(canvasId, numCanvas) {
         ctx.stroke();
     });
 
+    // Dibujar puntos de cotejo en naranja
     ctx.strokeStyle = 'orange';
     puntosCotejo.forEach(p => {
         if (p.canvasId === canvasId) {
@@ -968,14 +777,17 @@ function dibujarPuntos(canvasId, numCanvas) {
     });
 }
 
+// Función para manejar clics en cada canvas (se abre modal en vez de eliminar inmediatamente)
 function handleCanvasClick(event) {
+    // Identificar en qué canvas se hizo clic
     const canvas = event.target;
     const canvasId = canvas.id;
     const rect = canvas.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
     const clickY = event.clientY - rect.top;
-    const radioDeteccion = 7;
+    const radioDeteccion = 7; // Radio de detección para el clic
 
+    // Seleccionar los conjuntos de puntos según el canvas
     let puntosTerminacion, puntosBifurcacion;
     if (canvasId === 'canvasProcesada1') {
         puntosTerminacion = puntosTerminacion1;
@@ -985,11 +797,14 @@ function handleCanvasClick(event) {
         puntosBifurcacion = puntosBifurcacion2;
     }
 
+    // Buscar punto cercano en ambos conjuntos
     let puntoEncontrado = null;
     let tipo = null;
     let indice = -1;
     
+    // Buscar en terminaciones
     for (let i = 0; i < puntosTerminacion.length; i++) {
+        // Se compara usando la misma lógica original (p.y con clickX y p.x con clickY)
         const dist = Math.sqrt(Math.pow(puntosTerminacion[i].y - clickX, 2) + Math.pow(puntosTerminacion[i].x - clickY, 2));
         if (dist < radioDeteccion) {
             puntoEncontrado = puntosTerminacion[i];
@@ -998,6 +813,7 @@ function handleCanvasClick(event) {
             break;
         }
     }
+    // Si no se encontró en terminaciones, buscar en bifurcaciones
     if (!puntoEncontrado) {
         for (let i = 0; i < puntosBifurcacion.length; i++) {
             const dist = Math.sqrt(Math.pow(puntosBifurcacion[i].y - clickX, 2) + Math.pow(puntosBifurcacion[i].x - clickY, 2));
@@ -1011,25 +827,30 @@ function handleCanvasClick(event) {
     }
 
     if (puntoEncontrado) {
+        // Si se encontró un punto, guardar la info y abrir el modal
         pendingDeletion = { canvasId, tipo, indice, x: puntoEncontrado.x, y: puntoEncontrado.y };
         abrirModal();
     } else {
+        // Si no se encontró punto, agregar uno nuevo para cotejo (se usa el mismo orden: x = clickY, y = clickX)
         puntosCotejo.push({ x: clickY, y: clickX, canvasId });
         redibujarCanvas(canvasId, canvasId === 'canvasProcesada1' ? 1 : 2);
     }
 }
 
+// Función para abrir el modal
 function abrirModal() {
     const modal = document.getElementById('deletePointModal');
     modal.style.display = 'block';
 }
 
+// Función para cerrar el modal
 function cerrarModal() {
     const modal = document.getElementById('deletePointModal');
     modal.style.display = 'none';
     pendingDeletion = null;
 }
 
+// Función para confirmar la eliminación y redibujar el canvas
 function confirmarEliminacion() {
     if (!pendingDeletion) return;
     
@@ -1052,6 +873,7 @@ function confirmarEliminacion() {
     cerrarModal();
 }
 
+// Función para marcar un punto para cotejo (opción en el modal)
 function marcarParaCotejo() {
     if (!pendingDeletion) return;
     const { canvasId, x, y } = pendingDeletion;
@@ -1060,7 +882,9 @@ function marcarParaCotejo() {
     cerrarModal();
 }
 
+// Función para eliminar (depurar) los puntos que NO están en la lista de cotejo
 function eliminarPuntosNoCotejados() {
+    // Filtra los puntos manteniendo solo aquellos que están en la lista de cotejo
     const filtrarPuntos = (puntos, canvasId) =>
         puntos.filter(p => puntosCotejo.some(pc => pc.x === p.x && pc.y === p.y && pc.canvasId === canvasId));
 
@@ -1073,6 +897,7 @@ function eliminarPuntosNoCotejados() {
     redibujarCanvas('canvasProcesada2', 2);
 }
 
+// Función para redibujar el canvas usando la imagen limpia almacenada
 function redibujarCanvas(canvasId, numCanvas) {
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
@@ -1087,136 +912,17 @@ function redibujarCanvas(canvasId, numCanvas) {
     img.src = imagenDataURL;
 }
 
+// Asignar el manejador de clics a ambos canvas
 document.getElementById('canvasProcesada1').addEventListener('click', handleCanvasClick);
 document.getElementById('canvasProcesada2').addEventListener('click', handleCanvasClick);
 
+// Asignar los botones del modal
 document.getElementById('confirmDelete').addEventListener('click', confirmarEliminacion);
 document.getElementById('marcarCotejo').addEventListener('click', marcarParaCotejo);
 document.getElementById('cancelDelete').addEventListener('click', cerrarModal);
+
 document.getElementById('eliminarNoCotejados').addEventListener('click', eliminarPuntosNoCotejados);
 
-window.procesarImagenes = procesarImagenes;
-
-// ================================
-// Nuevo código: Plano Cartesiano extendido a los bordes y etiquetado desde el eje X
-// ================================
-
-// Función auxiliar: calcula intersecciones de una línea infinita con el rectángulo de la imagen.
-function getLineIntersections(P, D, width, height) {
-    let intersections = [];
-    if (D.x !== 0) {
-        let t = (0 - P.x) / D.x;
-        let y = P.y + t * D.y;
-        if (y >= 0 && y <= height) intersections.push({ point: { x: 0, y: y }, t });
-
-        t = (width - P.x) / D.x;
-        y = P.y + t * D.y;
-        if (y >= 0 && y <= height) intersections.push({ point: { x: width, y: y }, t });
-    }
-    if (D.y !== 0) {
-        let t = (0 - P.y) / D.y;
-        let x = P.x + t * D.x;
-        if (x >= 0 && x <= width) intersections.push({ point: { x: x, y: 0 }, t });
-
-        t = (height - P.y) / D.y;
-        x = P.x + t * D.x;
-        if (x >= 0 && x <= width) intersections.push({ point: { x: x, y: height }, t });
-    }
-    return intersections;
-}
-
-// Función para dibujar el plano cartesiano basado en los puntos de cotejo en un canvas inferior.
-function dibujarPlanoCartesiano(canvasOriginalId, canvasPlanoId) {
-    const puntos = puntosCotejo.filter(p => p.canvasId === canvasOriginalId);
-    if (puntos.length < 2) {
-        alert("Se necesitan al menos 2 puntos de cotejo para definir el plano.");
-        return;
-    }
-
-    let pLeft = puntos.reduce((prev, curr) => (curr.y < prev.y ? curr : prev));
-    let pRight = puntos.reduce((prev, curr) => (curr.y > prev.y ? curr : prev));
-
-    const X1 = pLeft.y, Y1 = pLeft.x;
-    const X2 = pRight.y, Y2 = pRight.x;
-    const dx = X2 - X1, dy = Y2 - Y1;
-    const norm = Math.sqrt(dx * dx + dy * dy);
-    if (norm === 0) { alert("No se puede definir la línea base."); return; }
-
-    const ux = dx / norm, uy = dy / norm;
-    const vx = -uy, vy = ux;
-
-    const canvasOriginal = document.getElementById(canvasOriginalId);
-    const imagenDataURL = canvasOriginal.getAttribute('data-img');
-    if (!imagenDataURL) return;
-    const canvasPlano = document.getElementById(canvasPlanoId);
-    const ctxPlano = canvasPlano.getContext('2d');
-    const img = new Image();
-    img.onload = function() {
-        canvasPlano.width = img.width;
-        canvasPlano.height = img.height;
-        ctxPlano.drawImage(img, 0, 0);
-
-        const baseInts = getLineIntersections({ x: X1, y: Y1 }, { x: dx, y: dy }, img.width, img.height);
-        if (baseInts.length < 2) { alert("No se pudieron obtener intersecciones para la línea base."); return; }
-        baseInts.sort((a, b) => a.t - b.t);
-        const baseP1 = baseInts[0].point, baseP2 = baseInts[baseInts.length - 1].point;
-
-        ctxPlano.strokeStyle = 'green';
-        ctxPlano.lineWidth = 2;
-        ctxPlano.beginPath();
-        ctxPlano.moveTo(baseP1.x, baseP1.y);
-        ctxPlano.lineTo(baseP2.x, baseP2.y);
-        ctxPlano.stroke();
-
-        const perpInts = getLineIntersections({ x: X1, y: Y1 }, { x: vx, y: vy }, img.width, img.height);
-        if (perpInts.length < 2) { alert("No se pudieron obtener intersecciones para la línea perpendicular."); return; }
-        perpInts.sort((a, b) => a.t - b.t);
-        const perpP1 = perpInts[0].point, perpP2 = perpInts[perpInts.length - 1].point;
-
-        ctxPlano.strokeStyle = 'purple';
-        ctxPlano.beginPath();
-        ctxPlano.moveTo(perpP1.x, perpP1.y);
-        ctxPlano.lineTo(perpP2.x, perpP2.y);
-        ctxPlano.stroke();
-
-        let puntosConAngulo = [];
-        puntos.forEach(p => {
-            const Xp = p.y, Yp = p.x;
-            const dxp = Xp - X1, dyp = Yp - Y1;
-            const Xprime = dxp * ux + dyp * uy, Yprime = dxp * vx + dyp * vy;
-            let angulo = Math.atan2(Yprime, Xprime);
-            if (angulo < 0) { angulo += 2 * Math.PI; }
-            puntosConAngulo.push({ p, angulo });
-        });
-
-        let puntosEtiquetados = puntosConAngulo.sort((a, b) => a.angulo - b.angulo);
-        const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        puntosEtiquetados = puntosEtiquetados.map((item, index) => {
-            return { ...item, letra: alfabeto[index] || '?' };
-        });
-
-        ctxPlano.strokeStyle = 'orange';
-        puntosEtiquetados.forEach(item => {
-            const pt = item.p;
-            ctxPlano.beginPath();
-            ctxPlano.arc(pt.y, pt.x, 5, 0, 2 * Math.PI);
-            ctxPlano.stroke();
-        });
-
-        ctxPlano.font = "16px Arial";
-        ctxPlano.fillStyle = 'black';
-        puntosEtiquetados.forEach(item => {
-            ctxPlano.fillText(item.letra, item.p.y + 8, item.p.x - 8);
-        });
-    };
-    img.src = imagenDataURL;
-}
-
-// Asignar el botón para mostrar los planos
-document.getElementById('mostrarPlanos').addEventListener('click', function () {
-    dibujarPlanoCartesiano('canvasProcesada1', 'canvasPlano1');
-    dibujarPlanoCartesiano('canvasProcesada2', 'canvasPlano2');
-});
 
 </script>
 

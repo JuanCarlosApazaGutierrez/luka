@@ -53,7 +53,7 @@ urlpatterns = [
     path('aplicar_filtros/', views.aplicar_filtros, name="aplicar_filtros"),
     path('binalizado_automatico/', views.binalizado_automatico, name='binalizado_automatico'),
     path('procesar_imagenes/', views.procesar_imagenes, name="procesar_imagenes"),
-
+    # path('eliminar_punto/',views.eliminar_punto, name='eliminar_punto'),
     
 ]
 
