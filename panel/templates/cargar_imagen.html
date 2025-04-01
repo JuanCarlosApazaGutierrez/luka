@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cargar Imagen</title>
+</head>
+<body>
+    <h1>Cargar Imagen para Procesamiento</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="image">Seleccionar Imagen</label>
+        <input type="file" name="image" accept="image/*" required><br>
+        <button type="submit">Cargar y Procesar Imagen</button>
+    </form>
+</body>
+</html>

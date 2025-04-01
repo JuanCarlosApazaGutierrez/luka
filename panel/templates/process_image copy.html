@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Procesamiento de Huellas</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .parametro { margin-bottom: 1em; }
+    </style>
+</head>
+<body>
+    <h1>Preprocesamiento de Huellas</h1>
+    <form id="preproc-form" enctype="multipart/form-data" method="post">
+        {% csrf_token %}
+        <!-- Input de imagen -->
+        <div>
+            <label for="id_image">Selecciona una imagen</label><br>
+            <input type="file" id="id_image" name="image" accept="image/*">
+        </div>
+        <h3>Parámetros del algoritmo</h3>
+
+        <!-- Parámetros -->
+        <div class="parametro">
+            <label for="id_factor_escala_relativo_x">Factor Escala Relativo X</label><br>
+            <input type="number" step="0.01" id="id_factor_escala_relativo_x" name="factor_escala_relativo_x" value="0.65">
+        </div>
+        <div class="parametro">
+            <label for="id_factor_escala_relativo_y">Factor Escala Relativo Y</label><br>
+            <input type="number" step="0.01" id="id_factor_escala_relativo_y" name="factor_escala_relativo_y" value="0.65">
+        </div>
+        <div class="parametro">
+            <label for="id_incremento_angulo">Incremento Ángulo</label><br>
+            <input type="number" id="id_incremento_angulo" name="incremento_angulo" value="3">
+        </div>
+        <div class="parametro">
+            <label for="id_longitud_de_onda_maxima">Longitud de Onda Máxima</label><br>
+            <input type="number" id="id_longitud_de_onda_maxima" name="longitud_de_onda_maxima" value="15">
+        </div>
+        <div class="parametro">
+            <label for="id_longitud_de_onda_minima">Longitud de Onda Mínima</label><br>
+            <input type="number" id="id_longitud_de_onda_minima" name="longitud_de_onda_minima" value="5">
+        </div>
+        <div class="parametro">
+            <label for="id_sigma_bloque">Sigma Bloque</label><br>
+            <input type="number" id="id_sigma_bloque" name="sigma_bloque" value="7">
+        </div>
+        <div class="parametro">
+            <label for="id_sigma_gradiente">Sigma Gradiente</label><br>
+            <input type="number" id="id_sigma_gradiente" name="sigma_gradiente" value="1">
+        </div>
+        <div class="parametro">
+            <label for="id_sigma_suavizado_orientacion">Sigma Suavizado Orientación</label><br>
+            <input type="number" id="id_sigma_suavizado_orientacion" name="sigma_suavizado_orientacion" value="7">
+        </div>
+        <div class="parametro">
+            <label for="id_tam_bloque_frecuencia_crestas">Tamaño Bloque Frecuencia Crestas</label><br>
+            <input type="number" id="id_tam_bloque_frecuencia_crestas" name="tam_bloque_frecuencia_crestas" value="38">
+        </div>
+        <div class="parametro">
+            <label for="id_tam_bloque_segmento_crestas">Tamaño Bloque Segmento Crestas</label><br>
+            <input type="number" id="id_tam_bloque_segmento_crestas" name="tam_bloque_segmento_crestas" value="16">
+        </div>
+        <div class="parametro">
+            <label for="id_tam_ventana_frecuencia_crestas">Tamaño Ventana Frecuencia Crestas</label><br>
+            <input type="number" id="id_tam_ventana_frecuencia_crestas" name="tam_ventana_frecuencia_crestas" value="5">
+        </div>
+        <div class="parametro">
+            <label for="id_umbral_filtro_crestas">Umbral Filtro Crestas</label><br>
+            <input type="number" step="0.1" id="id_umbral_filtro_crestas" name="umbral_filtro_crestas" value="-3">
+        </div>
+        <div class="parametro">
+            <label for="id_umbral_segmento_crestas">Umbral Segmento Crestas</label><br>
+            <input type="number" step="0.1" id="id_umbral_segmento_crestas" name="umbral_segmento_crestas" value="0.1">
+        </div>
+        <div class="parametro">
+            <label for="id_nuevas_filas_redimensionar">Nuevas Filas Redimensionar</label><br>
+            <input type="number" id="id_nuevas_filas_redimensionar" name="nuevas_filas_redimensionar" value="350">
+        </div>
+
+        <button type="button" id="process-btn">Procesar</button>
+    </form>
+
+    <h3>Imagen Procesada</h3>
+    <div id="result">
+        <img id="processed-image" src="" alt="La imagen procesada aparecerá aquí" style="max-width:500px; border:1px solid #ccc;">
+    </div>
+
+    <script>
+    // Función para obtener el CSRF token
+    function getCSRFToken() {
+        const name = 'csrftoken=';
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const cookies = decodedCookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            let c = cookies[i].trim();
+            if (c.indexOf(name) === 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return '';
+    }
+
+    // Enviar formulario vía AJAX
+    function procesarImagen() {
+        const formData = new FormData($('#preproc-form')[0]);
+
+        $.ajax({
+            url: "{% url 'process_image' %}",  // Asegúrate de tener esta URL definida en urls.py
+            type: "POST",
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            },
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.processed_image) {
+                    $('#processed-image').attr('src', 'data:image/jpeg;base64,' + response.processed_image);
+                } else if (response.error) {
+                    alert("Error: " + response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error en el servidor:", error);
+                alert("Ocurrió un error en el servidor.");
+            }
+        });
+    }
+
+    // Click del botón
+    $('#process-btn').on('click', function() {
+        procesarImagen();
+    });
+
+    // Procesar automáticamente si cambias un parámetro
+    $('.parametro input').on('change', function() {
+        const fileSelected = $('#id_image').val();
+        if (fileSelected) {
+            procesarImagen();
+        }
+    });
+    </script>
+</body>
+</html>

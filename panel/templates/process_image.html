@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Procesamiento de Huellas</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      .parametro { margin-bottom: 1em; }
+    </style>
+</head>
+<body>
+    <h1>Preprocesamiento de Huellas</h1>
+    <form id="preproc-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Input de imagen -->
+        <div>
+            <label for="id_image">Selecciona una imagen</label><br>
+            <input type="file" id="id_image" name="image" accept="image/*">
+        </div>
+        <h3>Parámetros del algoritmo</h3>
+        <div class="parametro">
+            <label for="id_factor_escala_relativo_x">Factor Escala Relativo X</label><br>
+            <input type="number" step="0.01" id="id_factor_escala_relativo_x" name="factor_escala_relativo_x" value="0.65">
+            <small>Determina la escala relativa en X.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_factor_escala_relativo_y">Factor Escala Relativo Y</label><br>
+            <input type="number" step="0.01" id="id_factor_escala_relativo_y" name="factor_escala_relativo_y" value="0.65">
+            <small>Determina la escala relativa en Y.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_incremento_angulo">Incremento Ángulo</label><br>
+            <input type="number" id="id_incremento_angulo" name="incremento_angulo" value="3">
+            <small>Incremento en grados para la rotación en filtros.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_longitud_de_onda_maxima">Longitud de Onda Máxima</label><br>
+            <input type="number" id="id_longitud_de_onda_maxima" name="longitud_de_onda_maxima" value="15">
+            <small>Valor máximo permitido para la longitud de onda.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_longitud_de_onda_minima">Longitud de Onda Mínima</label><br>
+            <input type="number" id="id_longitud_de_onda_minima" name="longitud_de_onda_minima" value="5">
+            <small>Valor mínimo permitido para la longitud de onda.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_sigma_bloque">Sigma Bloque</label><br>
+            <input type="number" id="id_sigma_bloque" name="sigma_bloque" value="7">
+            <small>Desviación estándar para el filtro del bloque.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_sigma_gradiente">Sigma Gradiente</label><br>
+            <input type="number" id="id_sigma_gradiente" name="sigma_gradiente" value="1">
+            <small>Desviación estándar para el filtro del gradiente.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_sigma_suavizado_orientacion">Sigma Suavizado Orientación</label><br>
+            <input type="number" id="id_sigma_suavizado_orientacion" name="sigma_suavizado_orientacion" value="7">
+            <small>Desviación estándar para suavizar la orientación.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_tam_bloque_frecuencia_crestas">Tamaño Bloque Frecuencia Crestas</label><br>
+            <input type="number" id="id_tam_bloque_frecuencia_crestas" name="tam_bloque_frecuencia_crestas" value="38">
+            <small>Tamaño del bloque para calcular la frecuencia de las crestas.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_tam_bloque_segmento_crestas">Tamaño Bloque Segmento Crestas</label><br>
+            <input type="number" id="id_tam_bloque_segmento_crestas" name="tam_bloque_segmento_crestas" value="16">
+            <small>Tamaño del bloque para segmentar las crestas.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_tam_ventana_frecuencia_crestas">Tamaño Ventana Frecuencia Crestas</label><br>
+            <input type="number" id="id_tam_ventana_frecuencia_crestas" name="tam_ventana_frecuencia_crestas" value="5">
+            <small>Tamaño de la ventana en el cálculo de frecuencia.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_umbral_filtro_crestas">Umbral Filtro Crestas</label><br>
+            <input type="number" step="0.1" id="id_umbral_filtro_crestas" name="umbral_filtro_crestas" value="-3">
+            <small>Umbral para el filtro de crestas.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_umbral_segmento_crestas">Umbral Segmento Crestas</label><br>
+            <input type="number" step="0.1" id="id_umbral_segmento_crestas" name="umbral_segmento_crestas" value="0.1">
+            <small>Umbral para segmentar las crestas en la imagen.</small>
+        </div>
+        <div class="parametro">
+            <label for="id_nuevas_filas_redimensionar">Nuevas Filas Redimensionar</label><br>
+            <input type="number" id="id_nuevas_filas_redimensionar" name="nuevas_filas_redimensionar" value="350">
+            <small>Cantidad de filas para redimensionar la imagen.</small>
+        </div>
+        <button type="button" id="process-btn">Procesar</button>
+    </form>
+
+    <h3>Imagen Procesada</h3>
+    <div id="result">
+        <!-- La imagen resultante se mostrará aquí -->
+        <img id="processed-image" src="" alt="La imagen procesada aparecerá aquí" style="max-width:500px; border:1px solid #ccc;">
+    </div>
+
+    <script>
+    // Función para enviar el formulario vía AJAX
+    function procesarImagen() {
+        var formData = new FormData($('#preproc-form')[0]);
+        $.ajax({
+            url: "{% url 'process_image' %}",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if(response.processed_image) {
+                    $('#processed-image').attr('src', 'data:image/jpeg;base64,' + response.processed_image);
+                } else if(response.error) {
+                    alert("Error: " + response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert("Ocurrió un error: " + error);
+            }
+        });
+    }
+
+    // Al presionar el botón "Procesar"
+    $('#process-btn').on('click', function(){
+        procesarImagen();
+    });
+
+    // Actualiza la imagen automáticamente al cambiar cualquier input,
+    // siempre que se haya seleccionado una imagen
+    $('#preproc-form').on('change', 'input', function(){
+        if($('#id_image').val()){
+            procesarImagen();
+        }
+    });
+    </script>
+</body>
+</html>
