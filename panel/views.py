@@ -51,6 +51,40 @@ from skimage.morphology import skeletonize, convex_hull_image, erosion, square
 import skimage.draw
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import cv2
+import numpy as np
+from django.core.files.base import ContentFile
+from io import BytesIO
+from .models import Huellas
+from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserChangeForm
+import csv
+from django.db.models import Q
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table, TableStyle, Spacer
+from reportlab.lib.units import inch
+from reportlab.lib.colors import Color
+from django.http import HttpResponse
+from urllib.parse import unquote
+import datetime
+
+from reportlab.lib.enums import TA_JUSTIFY
+import base64
+import cv2
+import numpy as np
+from PIL import Image, ImageEnhance
+from io import BytesIO
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+import base64
+from io import BytesIO
+from PIL import Image
+import numpy as np
+from django.http import JsonResponse
 
 TEMPLATES_DIRS={
     'os.path.join(BASE_DIR,"templates")'
@@ -225,12 +259,6 @@ def obtener_detalle_caso(request):
         huella_instancia.original_image.save(huella.name, huella, save=False)
   
 
-import cv2
-import numpy as np
-from django.core.files.base import ContentFile
-from io import BytesIO
-from .models import Huellas
-from django.shortcuts import render, redirect
 
 
 def agregar_huella(request):
@@ -354,9 +382,6 @@ def form_editar_caso(request, id_caso):
     
 
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserChangeForm
 
 
 def editar_usuario(request, id_usuario):
@@ -664,8 +689,7 @@ def buscar_nucleo_esqueleto(esqueleto):
             return (cX, cY)  
     return None
 
-import csv
-from django.db.models import Q
+
 
 
 
@@ -911,6 +935,7 @@ class PreprocesamientoHuellas:
         self.frecuencia_crestas()  
         self.filtrar_crestas() 
         return self.imagen_binaria
+
 
 #######################################################################
 
@@ -1197,16 +1222,7 @@ def obtener_imagenes_huella(request, huella_id):
     except ValueError:
         return JsonResponse({'error': 'Una o más imágenes no se pudieron encontrar'}, status=404)
 
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Image, Table, TableStyle, Spacer
-from reportlab.lib.units import inch
-from reportlab.lib.colors import Color
-from django.http import HttpResponse
-from urllib.parse import unquote
-import datetime
 
-from reportlab.lib.enums import TA_JUSTIFY
 def generar_pdf(request):
     
     response = HttpResponse(content_type='application/pdf')
@@ -1494,14 +1510,6 @@ def process_image(request):
     # Si es GET, simplemente renderiza la plantilla
     return render(request, 'process_image.html')
 
-import base64
-import cv2
-import numpy as np
-from PIL import Image, ImageEnhance
-from io import BytesIO
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
 
 
 @csrf_exempt
@@ -1610,13 +1618,6 @@ def binalizado_automatico(request):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
         
-
-
-import base64
-from io import BytesIO
-from PIL import Image
-import numpy as np
-from django.http import JsonResponse
 
 def convertir_serializable(obj):
     """
