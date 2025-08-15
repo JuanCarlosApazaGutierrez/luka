@@ -533,6 +533,19 @@
     </div>
 
         <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="filtered-image-container">
+                        <img id="binalizada1" src="../media/inicio.png" alt="Huella Binalizada 1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="filtered-image-container">
+                        <img id="binalizada2" src="../media/inicio.png" alt="Huella Binalizada 2">
+                    </div>
+                </div>
+            </div>
+            <br/>
             <div class="text-center">
                 <button type="button" class="btn btn-primary" onclick="procesarImagenes()">
                     <span class="fa fa-filter"></span> Mostrar puntos
@@ -541,23 +554,11 @@
             <hr/>
             <div class="row">
                 <div class="col-md-6">
-                    <!-- Hide image switcher controls initially, show after processing -->
-                    <div class="image-switcher-controls" id="switcher-controls-1" style="display: none; justify-content: center; margin-bottom: 10px; gap: 5px;">
-                        <button class="image-switch-btn active" data-canvas="1" data-type="binarized" onclick="cambiarImagenFondo(1, 'binarized')" style="padding: 8px 12px; border: 2px solid #007bff; background: #007bff; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">Binarizada</button>
-                        <button class="image-switch-btn" data-canvas="1" data-type="filtered" onclick="cambiarImagenFondo(1, 'filtered')" style="padding: 8px 12px; border: 2px solid #007bff; background: white; color: #007bff; border-radius: 4px; cursor: pointer; font-size: 12px;">Filtrada</button>
-                        <button class="image-switch-btn" data-canvas="1" data-type="original" onclick="cambiarImagenFondo(1, 'original')" style="padding: 8px 12px; border: 2px solid #007bff; background: white; color: #007bff; border-radius: 4px; cursor: pointer; font-size: 12px;">Original</button>
-                    </div>
                     <div class="canvas-container">
                         <canvas id="canvasProcesada1"></canvas>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <!-- Hide image switcher controls initially, show after processing -->
-                    <div class="image-switcher-controls" id="switcher-controls-2" style="display: none; justify-content: center; margin-bottom: 10px; gap: 5px;">
-                        <button class="image-switch-btn active" data-canvas="2" data-type="binarized" onclick="cambiarImagenFondo(2, 'binarized')" style="padding: 8px 12px; border: 2px solid #007bff; background: #007bff; color: white; border-radius: 4px; cursor: pointer; font-size: 12px;">Binarizada</button>
-                        <button class="image-switch-btn" data-canvas="2" data-type="filtered" onclick="cambiarImagenFondo(2, 'filtered')" style="padding: 8px 12px; border: 2px solid #007bff; background: white; color: #007bff; border-radius: 4px; cursor: pointer; font-size: 12px;">Filtrada</button>
-                        <button class="image-switch-btn" data-canvas="2" data-type="original" onclick="cambiarImagenFondo(2, 'original')" style="padding: 8px 12px; border: 2px solid #007bff; background: white; color: #007bff; border-radius: 4px; cursor: pointer; font-size: 12px;">Original</button>
-                    </div>
                     <div class="canvas-container">
                         <canvas id="canvasProcesada2"></canvas>
                     </div>
@@ -921,12 +922,6 @@ let currentImageNumber = 0;
 let manualPoints = {};
 let tempAxisPoints = {};
 
-let imageVersions = {
-    1: { original: null, filtered: null, binarized: null },
-    2: { original: null, filtered: null, binarized: null }
-};
-let currentImageType = { 1: 'binarized', 2: 'binarized' }; // Default to binarized
-
 function procesarImagenes() {
     const formData = new FormData();
     const img1 = document.getElementById('binalizada1');
@@ -991,37 +986,6 @@ function cargarCanvas(canvasId, imagenDataURL, resultados, numCanvas) {
         canvas.setAttribute('data-originalWidth', img.width);
         canvas.setAttribute('data-originalHeight', img.height);
         
-        imageVersions[numCanvas].binarized = imagenDataURL;
-        
-        // Get original and filtered images
-        const originalImg = document.getElementById(numCanvas === 1 ? 'image1' : 'image2');
-        const filteredImg = document.getElementById(`filtered-image${numCanvas}`);
-        
-        if (originalImg && originalImg.src) {
-            // Convert original image to data URL
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = originalImg.naturalWidth;
-            tempCanvas.height = originalImg.naturalHeight;
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.drawImage(originalImg, 0, 0);
-            imageVersions[numCanvas].original = tempCanvas.toDataURL();
-        }
-        
-        if (filteredImg && filteredImg.src) {
-            // Convert filtered image to data URL
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = filteredImg.naturalWidth;
-            tempCanvas.height = filteredImg.naturalHeight;
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCtx.drawImage(filteredImg, 0, 0);
-            imageVersions[numCanvas].filtered = tempCanvas.toDataURL();
-        }
-        
-        const switcherControls = document.getElementById(`switcher-controls-${numCanvas}`);
-        if (switcherControls) {
-            switcherControls.style.display = 'flex';
-        }
-
         if (numCanvas === 1) {
             puntosTerminacion1 = resultados.terminoX.map((x, index) => ({ x: x, y: resultados.terminoY[index] }));
             puntosBifurcacion1 = resultados.bifurX.map((x, index) => ({ x: x, y: resultados.bifurY[index] }));
@@ -1034,165 +998,53 @@ function cargarCanvas(canvasId, imagenDataURL, resultados, numCanvas) {
     img.src = imagenDataURL;
 }
 
-function cambiarImagenFondo(canvasNum, imageType) {
-    console.log("[v0] Changing background image for canvas", canvasNum, "to type", imageType);
-    
-    const canvasId = `canvasProcesada${canvasNum}`;
-    const canvas = document.getElementById(canvasId);
-    const ctx = canvas.getContext('2d');
-    
-    const buttons = document.querySelectorAll(`[data-canvas="${canvasNum}"]`);
-    buttons.forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.background = 'white';
-        btn.style.color = '#007bff';
-    });
-    
-    const activeButton = document.querySelector(`[data-canvas="${canvasNum}"][data-type="${imageType}"]`);
-    if (activeButton) {
-        activeButton.classList.add('active');
-        activeButton.style.background = '#007bff';
-        activeButton.style.color = 'white';
-    }
-    
-    let imageSrc = null;
-    if (imageType === 'original') {
-        imageSrc = imageVersions[canvasNum].original;
-    } else if (imageType === 'filtered') {
-        imageSrc = imageVersions[canvasNum].filtered;
-    } else if (imageType === 'binarized') {
-        imageSrc = imageVersions[canvasNum].binarized;
-    }
-    
-    if (!imageSrc) {
-        console.log("[v0] Image source not available for type:", imageType);
-        // Fallback to binarized image
-        imageSrc = imageVersions[canvasNum].binarized || canvas.getAttribute('data-img');
-    }
-    
-    if (!imageSrc) {
-        console.log("[v0] No image source available");
-        return;
-    }
-    
-    currentImageType[canvasNum] = imageType;
-    
-    const img = new Image();
-    img.onload = function() {
-        const scale = parseFloat(canvas.getAttribute('data-scale')) || 1;
-        const offsetX = parseFloat(canvas.getAttribute('data-offsetX')) || 0;
-        const offsetY = parseFloat(canvas.getAttribute('data-offsetY')) || 0;
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        const scaledWidth = img.width * scale;
-        const scaledHeight = img.height * scale;
-        ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
-        
-        // Update canvas data attribute
-        canvas.setAttribute('data-img', imageSrc);
-        
-        dibujarPuntos(canvasId, canvasNum);
-        
-        console.log("[v0] Successfully changed background image for canvas", canvasNum);
-    };
-    
-    img.onerror = function() {
-        console.log("[v0] Error loading image for background change");
-    };
-    
-    img.src = imageSrc;
-}
-
 function dibujarPuntos(canvasId, numCanvas) {
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
-    
-    // Redraw termination points
-    const puntosTerminacion = numCanvas === 1 ? puntosTerminacion1 : puntosTerminacion2;
-    puntosTerminacion.forEach(punto => {
-        ctx.fillStyle = 'red';
+    const scale = parseFloat(canvas.getAttribute('data-scale')) || 1;
+    const offsetX = parseFloat(canvas.getAttribute('data-offsetX')) || 0;
+    const offsetY = parseFloat(canvas.getAttribute('data-offsetY')) || 0;
+    const grosorBorde = 3;
+
+    let puntosTerminacion, puntosBifurcacion;
+    if (numCanvas === 1) {
+        puntosTerminacion = puntosTerminacion1;
+        puntosBifurcacion = puntosBifurcacion1;
+    } else {
+        puntosTerminacion = puntosTerminacion2;
+        puntosBifurcacion = puntosBifurcacion2;
+    }
+
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = grosorBorde;
+    puntosTerminacion.forEach(p => {
+        const scaledX = p.y * scale + offsetX;
+        const scaledY = p.x * scale + offsetY;
         ctx.beginPath();
-        ctx.arc(punto.x, punto.y, 3, 0, 2 * Math.PI);
-        ctx.fill();
+        ctx.arc(scaledX, scaledY, 5, 0, 2 * Math.PI);
+        ctx.stroke();
     });
-    
-    // Redraw bifurcation points
-    const puntosBifurcacion = numCanvas === 1 ? puntosBifurcacion1 : puntosBifurcacion2;
-    puntosBifurcacion.forEach(punto => {
-        ctx.fillStyle = 'blue';
+
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = grosorBorde;
+    puntosBifurcacion.forEach(p => {
+        const scaledX = p.y * scale + offsetX;
+        const scaledY = p.x * scale + offsetY;
         ctx.beginPath();
-        ctx.arc(punto.x, punto.y, 3, 0, 2 * Math.PI);
-        ctx.fill();
+        ctx.arc(scaledX, scaledY, 5, 0, 2 * Math.PI);
+        ctx.stroke();
     });
-    
-    // Redraw cotejo points with special marking
-    puntosCotejo.forEach(punto => {
-        if (punto.canvasId === canvasId) {
-            ctx.fillStyle = 'green';
+
+    ctx.strokeStyle = 'orange';
+    puntosCotejo.forEach(p => {
+        if (p.canvasId === canvasId) {
+            const scaledX = p.y * scale + offsetX;
+            const scaledY = p.x * scale + offsetY;
             ctx.beginPath();
-            ctx.arc(punto.x, punto.y, 5, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.strokeStyle = 'yellow';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(punto.x, punto.y, 7, 0, 2 * Math.PI);
+            ctx.arc(scaledX, scaledY, 5, 0, 2 * Math.PI);
             ctx.stroke();
         }
     });
-}
-
-function redibujarCanvas(canvasId, numCanvas) {
-    const canvas = document.getElementById(canvasId);
-    const ctx = canvas.getContext('2d');
-    
-    // Use current image type instead of always using stored data-img
-    const currentType = currentImageType[numCanvas] || 'binarized';
-    let imagenDataURL = null;
-    
-    if (currentType === 'original') {
-        imagenDataURL = imageVersions[numCanvas].original;
-    } else if (currentType === 'filtered') {
-        imagenDataURL = imageVersions[numCanvas].filtered;
-    } else {
-        imagenDataURL = imageVersions[numCanvas].binarized;
-    }
-    
-    // Fallback to canvas data attribute if version not available
-    if (!imagenDataURL) {
-        imagenDataURL = canvas.getAttribute('data-img');
-    }
-    
-    if (!imagenDataURL) return;
-    
-    const img = new Image();
-    
-    let imageLoadTimeout = setTimeout(() => {
-        console.log("[v0] Image load timeout for canvas:", canvasId);
-        return;
-    }, 5000);
-    
-    img.onload = function() {
-        clearTimeout(imageLoadTimeout);
-        const scale = parseFloat(canvas.getAttribute('data-scale')) || 1;
-        const offsetX = parseFloat(canvas.getAttribute('data-offsetX')) || 0;
-        const offsetY = parseFloat(canvas.getAttribute('data-offsetY')) || 0;
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        const scaledWidth = img.width * scale;
-        const scaledHeight = img.height * scale;
-        ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
-        
-        dibujarPuntos(canvasId, numCanvas);
-    }
-    
-    img.onerror = function() {
-        clearTimeout(imageLoadTimeout);
-        console.log("[v0] Error loading image for canvas:", canvasId);
-    }
-    
-    img.src = imagenDataURL;
 }
 
 function handleCanvasClick(event) {
@@ -1303,6 +1155,42 @@ function eliminarPuntosNoCotejados() {
 
     redibujarCanvas('canvasProcesada1', 1);
     redibujarCanvas('canvasProcesada2', 2);
+}
+
+function redibujarCanvas(canvasId, numCanvas) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    const imagenDataURL = canvas.getAttribute('data-img');
+    if (!imagenDataURL) return;
+    
+    const img = new Image();
+    
+    let imageLoadTimeout = setTimeout(() => {
+        console.log("[v0] Image load timeout for canvas:", canvasId);
+        return;
+    }, 5000);
+    
+    img.onload = function() {
+        clearTimeout(imageLoadTimeout);
+        const scale = parseFloat(canvas.getAttribute('data-scale')) || 1;
+        const offsetX = parseFloat(canvas.getAttribute('data-offsetX')) || 0;
+        const offsetY = parseFloat(canvas.getAttribute('data-offsetY')) || 0;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const scaledWidth = img.width * scale;
+        const scaledHeight = img.height * scale;
+        ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+        
+        dibujarPuntos(canvasId, numCanvas);
+    }
+    
+    img.onerror = function() {
+        clearTimeout(imageLoadTimeout);
+        console.log("[v0] Error loading image for canvas:", canvasId);
+    }
+    
+    img.src = imagenDataURL;
 }
 
 function handleManualPointSelection(event) {
