@@ -168,6 +168,79 @@
         background-color: #f8f9fa;
         border-radius: 8px;
     }
+
+    /* Added styles for correlation analysis section */
+    .correlation-section {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f0f8ff;
+        border-radius: 8px;
+        border: 2px solid #007bff;
+    }
+
+    .correlation-button {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        margin: 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+
+    .correlation-button:hover {
+        background-color: #218838;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+
+    .analysis-results {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .correlation-chart {
+        width: 100%;
+        max-width: 600px;
+        height: 400px;
+        margin: 20px auto;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+
+    .stat-card {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        border-left: 4px solid #007bff;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
    
       
       
@@ -568,6 +641,44 @@
                         <h4 class="text-center">Huella #2 - Plano Puro</h4>
                         <div class="canvas-container">
                             <canvas id="canvasPuro2"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Added correlation analysis section -->
+                <div class="correlation-section" id="correlationSection" style="display: none;">
+                    <h3 class="text-center">Análisis Estadístico de Correlación</h3>
+                    <div class="text-center">
+                        <button class="correlation-button" onclick="realizarAnalisisCorrelacion()">
+                            📊 Realizar Análisis de Correlación de Pearson
+                        </button>
+                    </div>
+                    
+                    <div id="analysisResults" class="analysis-results" style="display: none;">
+                        <h4>Resultados del Análisis Estadístico</h4>
+                        
+                        <div class="stats-grid" id="statsGrid">
+                            <!-- Statistics will be populated here -->
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Correlación de Distancias</h5>
+                                <canvas id="distanceCorrelationChart" class="correlation-chart"></canvas>
+                                <div id="distanceStats"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Correlación de Ángulos</h5>
+                                <canvas id="angleCorrelationChart" class="correlation-chart"></canvas>
+                                <div id="angleStats"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h5>Análisis Adicionales</h5>
+                                <div id="additionalAnalysis"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1474,6 +1585,477 @@ function actualizarTablaConNuevoSistema(imageNumber) {
         tableBody.appendChild(row);
     });
 }
+
+function dibujarPlanoCartesianoMejorado(canvasOriginalId, canvasPlanoId, canvasPuroId) {
+    const puntos = puntosCotejo.filter(p => p.canvasId === canvasOriginalId);
+    if (puntos.length < 3) {
+        alert("Se necesitan al menos 3 puntos de cotejo para definir un plano cartesiano mejorado.");
+        return;
+    }
+
+    // Find bottom-left and bottom-right points (closest to respective corners)
+    const maxY = Math.max(...puntos.map(p => p.x)); // bottom of image
+    const minX = Math.min(...puntos.map(p => p.y)); // left of image
+    const maxX = Math.max(...puntos.map(p => p.y)); // right of image
+
+    // Bottom-left: point with minimum distance to bottom-left corner
+    let bottomLeft = puntos.reduce((prev, curr) => {
+        const prevDist = Math.sqrt(Math.pow(prev.y - minX, 2) + Math.pow(prev.x - maxY, 2));
+        const currDist = Math.sqrt(Math.pow(curr.y - minX, 2) + Math.pow(curr.x - maxY, 2));
+        return currDist < prevDist ? curr : prev;
+    });
+
+    // Bottom-right: point with minimum distance to bottom-right corner
+    let bottomRight = puntos.reduce((prev, curr) => {
+        const prevDist = Math.sqrt(Math.pow(prev.y - maxX, 2) + Math.pow(prev.x - maxY, 2));
+        const currDist = Math.sqrt(Math.pow(curr.y - maxX, 2) + Math.pow(curr.x - maxY, 2));
+        return currDist < prevDist ? curr : prev;
+    });
+
+    // Top-left: point with minimum distance to top-left corner
+    const minY = Math.min(...puntos.map(p => p.x)); // top of image
+    let topLeft = puntos.reduce((prev, curr) => {
+        const prevDist = Math.sqrt(Math.pow(prev.y - minX, 2) + Math.pow(prev.x - minY, 2));
+        const currDist = Math.sqrt(Math.pow(curr.y - minX, 2) + Math.pow(curr.x - minY, 2));
+        return currDist < prevDist ? curr : prev;
+    });
+
+    // Define coordinate system based on these reference points
+    const X1 = bottomLeft.y, Y1 = bottomLeft.x;
+    const X2 = bottomRight.y, Y2 = bottomRight.x;
+    const X3 = topLeft.y, Y3 = topLeft.x;
+
+    // X-axis vector (from bottom-left to bottom-right)
+    const dx = X2 - X1, dy = Y2 - Y1;
+    const norm = Math.sqrt(dx * dx + dy * dy);
+    
+    if (norm === 0 || !isFinite(norm)) { 
+        alert("No se puede definir el eje X con estos puntos."); 
+        return; 
+    }
+
+    const ux = dx / norm, uy = dy / norm;
+
+    // Y-axis vector (perpendicular, pointing towards top-left)
+    const vx = -uy, vy = ux;
+
+    const canvasOriginal = document.getElementById(canvasOriginalId);
+    const imagenDataURL = canvasOriginal.getAttribute('data-img');
+    if (!imagenDataURL) return;
+    
+    const canvasPlano = document.getElementById(canvasPlanoId);
+    const canvasPuro = document.getElementById(canvasPuroId);
+    const ctxPlano = canvasPlano.getContext('2d');
+    const ctxPuro = canvasPuro.getContext('2d');
+    
+    const img = new Image();
+    
+    img.onload = function() {
+        canvasPlano.width = 480;
+        canvasPlano.height = 480;
+        canvasPuro.width = 480;
+        canvasPuro.height = 480;
+        canvasPlano.setAttribute('data-img', imagenDataURL);
+        
+        const scaleX = canvasPlano.width / img.width;
+        const scaleY = canvasPlano.height / img.height;
+        const scale = Math.min(scaleX, scaleY);
+        
+        if (!isFinite(scale) || scale <= 0) {
+            console.log("[v0] Invalid scale calculated");
+            return;
+        }
+        
+        const scaledWidth = img.width * scale;
+        const scaledHeight = img.height * scale;
+        const offsetX = (canvasPlano.width - scaledWidth) / 2;
+        const offsetY = (canvasPlano.height - scaledHeight) / 2;
+        
+        ctxPlano.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+        ctxPuro.fillStyle = 'white';
+        ctxPuro.fillRect(0, 0, canvasPuro.width, canvasPuro.height);
+
+        // Draw axes that span the full image
+        [ctxPlano, ctxPuro].forEach(ctx => {
+            // X-axis (horizontal line through bottom reference points)
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(offsetX, Y1 * scale + offsetY);
+            ctx.lineTo(offsetX + scaledWidth, Y1 * scale + offsetY);
+            ctx.stroke();
+            
+            // Y-axis (vertical line through left reference point)
+            ctx.strokeStyle = 'purple';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(X1 * scale + offsetX, offsetY);
+            ctx.lineTo(X1 * scale + offsetX, offsetY + scaledHeight);
+            ctx.stroke();
+        });
+
+        // Calculate coordinates for all points
+        let puntosConAngulo = [];
+        puntos.forEach(p => {
+            const Xp = p.y, Yp = p.x;
+            const dxp = Xp - X1, dyp = Yp - Y1;
+            const Xprime = dxp * ux + dyp * uy;
+            const Yprime = dxp * vx + dyp * vy;
+            let angulo = Math.atan2(Yprime, Xprime);
+            if (angulo < 0) { angulo += 2 * Math.PI; }
+            const distancia = Math.sqrt(Xprime * Xprime + Yprime * Yprime);
+            
+            if (isFinite(angulo) && isFinite(distancia)) {
+                puntosConAngulo.push({ p, angulo, distancia, Xprime, Yprime });
+            }
+        });
+
+        // Sort and label points
+        let puntosEtiquetados = puntosConAngulo.sort((a, b) => a.angulo - b.angulo);
+        const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        puntosEtiquetados = puntosEtiquetados.map((item, index) => {
+            return { ...item, letra: alfabeto[index] || '?' };
+        });
+
+        // Draw points and labels
+        ctxPlano.strokeStyle = 'orange';
+        ctxPlano.lineWidth = 3;
+        puntosEtiquetados.forEach(item => {
+            const pt = item.p;
+            const scaledX = pt.y * scale + offsetX;
+            const scaledY = pt.x * scale + offsetY;
+            ctxPlano.beginPath();
+            ctxPlano.arc(scaledX, scaledY, 6, 0, 2 * Math.PI);
+            ctxPlano.stroke();
+        });
+
+        ctxPlano.font = "16px Arial";
+        ctxPlano.fillStyle = 'black';
+        ctxPlano.strokeStyle = 'white';
+        ctxPlano.lineWidth = 3;
+        puntosEtiquetados.forEach(item => {
+            const scaledX = item.p.y * scale + offsetX;
+            const scaledY = item.p.x * scale + offsetY;
+            ctxPlano.strokeText(item.letra, scaledX + 10, scaledY - 10);
+            ctxPlano.fillText(item.letra, scaledX + 10, scaledY - 10);
+        });
+
+        // Draw pure cartesian plane
+        const originX = X1 * scale + offsetX;
+        const originY = Y1 * scale + offsetY;
+        
+        ctxPuro.fillStyle = 'red';
+        ctxPuro.beginPath();
+        ctxPuro.arc(originX, originY, 8, 0, 2 * Math.PI);
+        ctxPuro.fill();
+        
+        puntosEtiquetados.forEach(item => {
+            const scaledX = item.p.y * scale + offsetX;
+            const scaledY = item.p.x * scale + offsetY;
+            ctxPuro.strokeStyle = 'blue';
+            ctxPuro.lineWidth = 2;
+            ctxPuro.beginPath();
+            ctxPuro.moveTo(originX, originY);
+            ctxPuro.lineTo(scaledX, scaledY);
+            ctxPuro.stroke();
+            ctxPuro.fillStyle = 'orange';
+            ctxPuro.beginPath();
+            ctxPuro.arc(scaledX, scaledY, 6, 0, 2 * Math.PI);
+            ctxPuro.fill();
+            ctxPuro.font = "14px Arial";
+            ctxPuro.fillStyle = 'black';
+            ctxPuro.fillText(item.letra, scaledX + 10, scaledY - 10);
+        });
+
+        // Store data for correlation analysis
+        window.fingerprintData = window.fingerprintData || {};
+        const huellaNum = canvasOriginalId === 'canvasProcesada1' ? 1 : 2;
+        window.fingerprintData[`huella${huellaNum}`] = puntosEtiquetados;
+
+        actualizarTabla(puntosEtiquetados, canvasOriginalId);
+    };
+    
+    img.onerror = function() {
+        console.log("[v0] Error loading image for cartesian plane");
+    };
+    
+    img.src = imagenDataURL;
+}
+
+function realizarAnalisisCorrelacion() {
+    if (!window.fingerprintData || !window.fingerprintData.huella1 || !window.fingerprintData.huella2) {
+        alert("Primero debe generar los planos cartesianos para ambas huellas.");
+        return;
+    }
+
+    const datos1 = window.fingerprintData.huella1;
+    const datos2 = window.fingerprintData.huella2;
+
+    if (datos1.length !== datos2.length) {
+        alert("Las huellas deben tener el mismo número de puntos para el análisis de correlación.");
+        return;
+    }
+
+    // Extract distances and angles
+    const distancias1 = datos1.map(d => d.distancia);
+    const distancias2 = datos2.map(d => d.distancia);
+    const angulos1 = datos1.map(d => d.angulo * 180 / Math.PI);
+    const angulos2 = datos2.map(d => d.angulo * 180 / Math.PI);
+
+    // Calculate correlations
+    const correlacionDistancias = calcularCorrelacionPearson(distancias1, distancias2);
+    const correlacionAngulos = calcularCorrelacionPearson(angulos1, angulos2);
+    const correlacionSpearmanDist = calcularCorrelacionSpearman(distancias1, distancias2);
+    const correlacionSpearmanAng = calcularCorrelacionSpearman(angulos1, angulos2);
+
+    // Calculate regression
+    const regresionDistancias = calcularRegresionLineal(distancias1, distancias2);
+    const regresionAngulos = calcularRegresionLineal(angulos1, angulos2);
+
+    // Show results
+    document.getElementById('correlationSection').style.display = 'block';
+    document.getElementById('analysisResults').style.display = 'block';
+
+    mostrarEstadisticas(correlacionDistancias, correlacionAngulos, correlacionSpearmanDist, correlacionSpearmanAng, regresionDistancias, regresionAngulos);
+    dibujarGraficoCorrelacion('distanceCorrelationChart', distancias1, distancias2, regresionDistancias, 'Distancias');
+    dibujarGraficoCorrelacion('angleCorrelationChart', angulos1, angulos2, regresionAngulos, 'Ángulos (°)');
+
+    // Scroll to results
+    document.getElementById('correlationSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function calcularCorrelacionPearson(x, y) {
+    const n = x.length;
+    const sumX = x.reduce((a, b) => a + b, 0);
+    const sumY = y.reduce((a, b) => a + b, 0);
+    const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+    const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
+    const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+
+    const numerator = n * sumXY - sumX * sumY;
+    const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+    return denominator === 0 ? 0 : numerator / denominator;
+}
+
+function calcularCorrelacionSpearman(x, y) {
+    // Convert to ranks
+    const rankX = obtenerRangos(x);
+    const rankY = obtenerRangos(y);
+    return calcularCorrelacionPearson(rankX, rankY);
+}
+
+function obtenerRangos(arr) {
+    const sorted = arr.map((val, idx) => ({ val, idx })).sort((a, b) => a.val - b.val);
+    const ranks = new Array(arr.length);
+    sorted.forEach((item, rank) => {
+        ranks[item.idx] = rank + 1;
+    });
+    return ranks;
+}
+
+function calcularRegresionLineal(x, y) {
+    const n = x.length;
+    const sumX = x.reduce((a, b) => a + b, 0);
+    const sumY = y.reduce((a, b) => a + b, 0);
+    const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+    const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    // Calculate R²
+    const meanY = sumY / n;
+    const totalSumSquares = y.reduce((sum, yi) => sum + Math.pow(yi - meanY, 2), 0);
+    const residualSumSquares = y.reduce((sum, yi, i) => {
+        const predicted = slope * x[i] + intercept;
+        return sum + Math.pow(yi - predicted, 2);
+    }, 0);
+    const rSquared = 1 - (residualSumSquares / totalSumSquares);
+
+    return { slope, intercept, rSquared };
+}
+
+function mostrarEstadisticas(corrDist, corrAng, spearmanDist, spearmanAng, regDist, regAng) {
+    const statsGrid = document.getElementById('statsGrid');
+    statsGrid.innerHTML = `
+        <div class="stat-card">
+            <div class="stat-value">${corrDist.toFixed(3)}</div>
+            <div class="stat-label">Correlación Pearson<br>Distancias</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${corrAng.toFixed(3)}</div>
+            <div class="stat-label">Correlación Pearson<br>Ángulos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${spearmanDist.toFixed(3)}</div>
+            <div class="stat-label">Correlación Spearman<br>Distancias</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${spearmanAng.toFixed(3)}</div>
+            <div class="stat-label">Correlación Spearman<br>Ángulos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${regDist.rSquared.toFixed(3)}</div>
+            <div class="stat-label">R² Distancias</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${regAng.rSquared.toFixed(3)}</div>
+            <div class="stat-label">R² Ángulos</div>
+        </div>
+    `;
+
+    // Additional analysis
+    const additionalAnalysis = document.getElementById('additionalAnalysis');
+    additionalAnalysis.innerHTML = `
+        <div class="analysis-results">
+            <h6>Interpretación de Resultados:</h6>
+            <p><strong>Correlación de Pearson:</strong> Mide la relación lineal entre variables. Valores cercanos a 1 indican correlación positiva fuerte, cercanos a -1 correlación negativa fuerte, y cercanos a 0 no correlación lineal.</p>
+            <p><strong>Correlación de Spearman:</strong> Más robusta ante valores atípicos, mide relaciones monotónicas. Es útil cuando los datos no siguen una distribución normal.</p>
+            <p><strong>Coeficiente R²:</strong> Indica qué porcentaje de la varianza en Y es explicada por X. Valores más altos indican mejor ajuste del modelo lineal.</p>
+            
+            <h6>Análisis de Similitud:</h6>
+            <p><strong>Distancias:</strong> ${interpretarCorrelacion(corrDist)} (Pearson: ${corrDist.toFixed(3)})</p>
+            <p><strong>Ángulos:</strong> ${interpretarCorrelacion(corrAng)} (Pearson: ${corrAng.toFixed(3)})</p>
+            
+            <h6>Recomendación:</h6>
+            <p>${generarRecomendacion(corrDist, corrAng)}</p>
+        </div>
+    `;
+}
+
+function interpretarCorrelacion(r) {
+    const abs_r = Math.abs(r);
+    if (abs_r >= 0.9) return "Correlación muy fuerte";
+    if (abs_r >= 0.7) return "Correlación fuerte";
+    if (abs_r >= 0.5) return "Correlación moderada";
+    if (abs_r >= 0.3) return "Correlación débil";
+    return "Correlación muy débil o nula";
+}
+
+function generarRecomendacion(corrDist, corrAng) {
+    const promedio = (Math.abs(corrDist) + Math.abs(corrAng)) / 2;
+    if (promedio >= 0.8) {
+        return "Las huellas muestran una similitud muy alta. Muy probable que pertenezcan a la misma persona.";
+    } else if (promedio >= 0.6) {
+        return "Las huellas muestran similitud considerable. Probable que pertenezcan a la misma persona, se recomienda análisis adicional.";
+    } else if (promedio >= 0.4) {
+        return "Las huellas muestran similitud moderada. Se requiere análisis más detallado para determinar coincidencia.";
+    } else {
+        return "Las huellas muestran baja similitud. Poco probable que pertenezcan a la misma persona.";
+    }
+}
+
+function dibujarGraficoCorrelacion(canvasId, x, y, regression, label) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = 600;
+    canvas.height = 400;
+    
+    // Clear canvas
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Calculate scales
+    const margin = 60;
+    const plotWidth = canvas.width - 2 * margin;
+    const plotHeight = canvas.height - 2 * margin;
+    
+    const minX = Math.min(...x);
+    const maxX = Math.max(...x);
+    const minY = Math.min(...y);
+    const maxY = Math.max(...y);
+    
+    const scaleX = plotWidth / (maxX - minX);
+    const scaleY = plotHeight / (maxY - minY);
+    
+    // Draw axes
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(margin, margin);
+    ctx.lineTo(margin, canvas.height - margin);
+    ctx.lineTo(canvas.width - margin, canvas.height - margin);
+    ctx.stroke();
+    
+    // Draw grid
+    ctx.strokeStyle = '#eee';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 10; i++) {
+        const gridX = margin + (plotWidth * i / 10);
+        const gridY = margin + (plotHeight * i / 10);
+        
+        ctx.beginPath();
+        ctx.moveTo(gridX, margin);
+        ctx.lineTo(gridX, canvas.height - margin);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(margin, gridY);
+        ctx.lineTo(canvas.width - margin, gridY);
+        ctx.stroke();
+    }
+    
+    // Draw regression line
+    ctx.strokeStyle = '#ff4444';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    const y1 = regression.slope * minX + regression.intercept;
+    const y2 = regression.slope * maxX + regression.intercept;
+    const x1Screen = margin;
+    const y1Screen = canvas.height - margin - ((y1 - minY) * scaleY);
+    const x2Screen = canvas.width - margin;
+    const y2Screen = canvas.height - margin - ((y2 - minY) * scaleY);
+    ctx.moveTo(x1Screen, y1Screen);
+    ctx.lineTo(x2Screen, y2Screen);
+    ctx.stroke();
+    
+    // Draw points
+    ctx.fillStyle = '#4444ff';
+    for (let i = 0; i < x.length; i++) {
+        const screenX = margin + ((x[i] - minX) * scaleX);
+        const screenY = canvas.height - margin - ((y[i] - minY) * scaleY);
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, 4, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+    
+    // Draw labels
+    ctx.fillStyle = '#333';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${label} Huella 1`, canvas.width / 2, canvas.height - 10);
+    
+    ctx.save();
+    ctx.translate(15, canvas.height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(`${label} Huella 2`, 0, 0);
+    ctx.restore();
+    
+    // Draw equation
+    ctx.fillStyle = '#ff4444';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    const equation = `y = ${regression.slope.toFixed(3)}x + ${regression.intercept.toFixed(3)}`;
+    const rSquared = `R² = ${regression.rSquared.toFixed(3)}`;
+    ctx.fillText(equation, margin + 10, margin + 20);
+    ctx.fillText(rSquared, margin + 10, margin + 40);
+}
+
+document.getElementById('mostrarPlanos').addEventListener('click', function () {
+    document.getElementById('pointsTableBody1').innerHTML = '';
+    document.getElementById('pointsTableBody2').innerHTML = '';
+    document.getElementById('cartesianSection').style.display = 'block';
+    document.getElementById('correlationSection').style.display = 'block';
+    
+    // Use improved cartesian plane generation
+    dibujarPlanoCartesianoMejorado('canvasProcesada1', 'canvasPlano1', 'canvasPuro1');
+    dibujarPlanoCartesianoMejorado('canvasProcesada2', 'canvasPlano2', 'canvasPuro2');
+    
+    document.getElementById('cartesianSection').scrollIntoView({ behavior: 'smooth' });
+});
+
 </script>
 
 {% endblock %}
